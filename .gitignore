@@ -24,6 +24,7 @@ MANIFEST
 # Virtual Env
 .env
 .venv
+.venv_stable
 env/
 venv/
 ENV/
