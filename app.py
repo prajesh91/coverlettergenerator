@@ -2,13 +2,6 @@ import streamlit as st
 import utils
 import io
 
-# Cache the model loading to prevent reloading on every run
-@st.cache_resource
-def get_spacy_model():
-    return utils.load_spacy_model()
-
-# Pre-load model
-get_spacy_model()
 
 st.set_page_config(page_title="ATS Resume & Cover Letter Generator (LLM Powered)", layout="wide")
 

@@ -1,5 +1,3 @@
-import spacy
-from collections import Counter
 from docx import Document
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
@@ -8,27 +6,6 @@ import os
 import openai
 import google.generativeai as genai
 
-# Load Spacy model (Lazy loading)
-def load_spacy_model():
-    try:
-        return spacy.load("en_core_web_sm")
-    except OSError:
-        import subprocess
-        subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"])
-        return spacy.load("en_core_web_sm")
-
-def extract_keywords(text, num_keywords=20):
-    """
-    Extracts keywords from text using Spacy.
-    """
-    nlp = load_spacy_model()
-    doc = nlp(text)
-    keywords = []
-    for token in doc:
-        if token.pos_ in ["NOUN", "PROPN"] and not token.is_stop and not token.is_punct:
-            keywords.append(token.text.lower())
-    word_freq = Counter(keywords)
-    return [word for word, count in word_freq.most_common(num_keywords)]
 
 def call_llm(prompt, model_provider, api_key):
     """
