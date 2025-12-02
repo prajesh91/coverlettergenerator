@@ -26,8 +26,8 @@ def call_llm(prompt, model_provider, api_key):
     elif model_provider == "Google Gemini":
         genai.configure(api_key=api_key)
         try:
-            # Using gemini-1.5-flash for better speed and stability
-            model = genai.GenerativeModel('gemini-1.5-flash')
+            # Using gemini-flash-latest as verified with user key
+            model = genai.GenerativeModel('gemini-flash-latest')
             response = model.generate_content(prompt)
             return response.text
         except Exception as e:
