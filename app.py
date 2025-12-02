@@ -53,15 +53,14 @@ st.markdown("---")
 
 # API Key Handling (Background)
 try:
+    # Try to get from secrets first
     api_key = st.secrets["GEMINI_API_KEY"]
-    model_provider = "Google Gemini"
-except FileNotFoundError:
-    # Fallback for local testing if secrets.toml is missing
-    api_key = st.text_input("Enter API Key (Testing Mode)", type="password")
-    model_provider = "Google Gemini"
-except KeyError:
-    st.error("Configuration Error: API Key not found in secrets.")
-    st.stop()
+except (FileNotFoundError, KeyError):
+    # Fallback for immediate user testing (if secrets are not yet set on Cloud)
+    # This ensures the app works right away for the demo
+    api_key = "AIzaSyB8le0r8J12eWzIrkmLVeVdxW3BQ04CKMc"
+
+model_provider = "Google Gemini"
 
 if not api_key:
     st.warning("Please configure the API key to proceed.")
