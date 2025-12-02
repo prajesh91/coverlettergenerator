@@ -34,93 +34,97 @@ def call_llm(prompt, model_provider, api_key):
     
     return "Invalid Model Provider"
 
-def generate_resume_content(profile_data, job_data, model_provider, api_key):
+from pdfminer.high_level import extract_text
+
+def extract_text_from_pdf(file):
     """
-    Generates resume content using LLM.
+    Extracts text from a PDF file.
+    """
+    return extract_text(file)
+
+def extract_text_from_docx(file):
+    """
+    Extracts text from a DOCX file.
+    """
+    doc = Document(file)
+    return "\n".join([para.text for para in doc.paragraphs])
+
+def analyze_ats_score(resume_text, job_description, model_provider, api_key):
+    """
+    Analyzes the resume against the job description and provides an ATS score.
     """
     prompt = f"""
-    You are an expert resume writer. Rewrite the following professional summary and experience to tailor it for the job description provided.
-    Ensure you include relevant keywords from the job description to pass ATS systems.
+    You are an expert ATS (Applicant Tracking System) scanner. 
+    Analyze the following resume against the job description.
     
     Job Description:
-    {job_data['description']}
+    {job_description}
     
-    Candidate Profile:
-    Name: {profile_data['name']}
-    Summary: {profile_data['summary']}
-    Experience: {profile_data['experience']}
-    Skills: {profile_data['skills']}
+    Resume:
+    {resume_text}
     
     Output Format:
-    Provide the output in two sections:
-    1. Professional Summary
-    2. Experience (bullet points)
-    Do not include any other text.
+    Provide a detailed analysis in the following format:
+    
+    **Match Score**: [Score]/100
+    
+    **Missing Keywords**:
+    - [Keyword 1]
+    - [Keyword 2]
+    
+    **Improvement Suggestions**:
+    - [Suggestion 1]
+    - [Suggestion 2]
     """
     return call_llm(prompt, model_provider, api_key)
 
-def generate_cover_letter_content(profile_data, job_data, model_provider, api_key):
+def generate_resume_content(resume_text, job_description, model_provider, api_key):
+    """
+    Generates tailored resume content using LLM.
+    """
+    prompt = f"""
+    You are an expert resume writer. Rewrite the following resume to tailor it for the job description provided.
+    Ensure you include relevant keywords from the job description to pass ATS systems.
+    Target a 90%+ match rate.
+    
+    Job Description:
+    {job_description}
+    
+    Original Resume:
+    {resume_text}
+    
+    Output Format:
+    Provide the full content of the new resume. 
+    Do not include any introductory or concluding remarks. 
+    Just the resume content.
+    """
+    return call_llm(prompt, model_provider, api_key)
+
+def generate_cover_letter_content(resume_text, job_description, model_provider, api_key):
     """
     Generates cover letter content using LLM.
     """
     prompt = f"""
-    You are an expert career coach. Write a persuasive cover letter for the following candidate applying for the specified job.
+    You are an expert career coach. Write a persuasive cover letter based on the candidate's resume and the job description.
     
-    Job Details:
-    Title: {job_data['title']}
-    Company: {job_data['company']}
-    Description: {job_data['description']}
+    Job Description:
+    {job_description}
     
-    Candidate Profile:
-    Name: {profile_data['name']}
-    Email: {profile_data['email']}
-    Phone: {profile_data['phone']}
-    Summary: {profile_data['summary']}
-    Experience: {profile_data['experience']}
+    Resume:
+    {resume_text}
     
     The cover letter should be professional, engaging, and highlight why the candidate is a great fit.
+    Do not include placeholders like [Your Name] if the information is available in the resume.
     """
     return call_llm(prompt, model_provider, api_key)
 
-def generate_resume_docx(profile_data, job_data, model_provider, api_key):
+def generate_docx_from_text(text_content):
     """
-    Generates a DOCX resume using LLM content.
+    Generates a DOCX file from raw text.
     """
-    # Get LLM content
-    llm_content = generate_resume_content(profile_data, job_data, model_provider, api_key)
-    
     doc = Document()
-    
-    # Header
-    doc.add_heading(profile_data.get('name', 'Name'), 0)
-    doc.add_paragraph(f"{profile_data.get('email', '')} | {profile_data.get('phone', '')}")
-    
-    # Parse LLM content (Simple split for now, robust parsing would be better)
-    # Assuming LLM follows instructions roughly
-    doc.add_heading('Optimized Content', level=1)
-    doc.add_paragraph(llm_content)
-    
-    # Education (Static)
-    doc.add_heading('Education', level=1)
-    doc.add_paragraph(profile_data.get('education', ''))
-    
-    # Skills (Static + Keywords)
-    doc.add_heading('Skills', level=1)
-    doc.add_paragraph(profile_data.get('skills', ''))
-
-    file_stream = io.BytesIO()
-    doc.save(file_stream)
-    file_stream.seek(0)
-    return file_stream
-
-def generate_cover_letter_docx(profile_data, job_data, model_provider, api_key):
-    """
-    Generates a DOCX cover letter using LLM content.
-    """
-    llm_content = generate_cover_letter_content(profile_data, job_data, model_provider, api_key)
-    
-    doc = Document()
-    doc.add_paragraph(llm_content)
+    for line in text_content.split('\n'):
+        doc.add_paragraph(line)
     
     file_stream = io.BytesIO()
     doc.save(file_stream)
