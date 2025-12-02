@@ -44,12 +44,22 @@ def extract_text_from_pdf(file):
     """
     return extract_text(file)
 
-def extract_text_from_docx(file):
+import re
+
+def clean_text(text):
     """
-    Extracts text from a DOCX file.
+    Removes markdown formatting like **bold**, --, etc.
     """
-    doc = Document(file)
-    return "\n".join([para.text for para in doc.paragraphs])
+    # Remove bold/italic markers
+    text = re.sub(r'\*\*|__', '', text)
+    text = re.sub(r'\*|_', '', text)
+    # Remove headers
+    text = re.sub(r'^#+\s*', '', text, flags=re.MULTILINE)
+    # Remove list markers if they are just dashes (optional, but user asked for no --)
+    # Keeping bullet points might be good for readability, but user said "no --"
+    # Let's just remove double dashes which are often used as separators
+    text = re.sub(r'--', '', text)
+    return text.strip()
 
 def analyze_ats_score(resume_text, job_description, model_provider, api_key):
     """
@@ -66,41 +76,43 @@ def analyze_ats_score(resume_text, job_description, model_provider, api_key):
     {resume_text}
     
     Output Format:
-    Provide a detailed analysis in the following format:
+    Provide a detailed analysis in plain text. Do NOT use markdown formatting (no bold, no italics, no headers).
     
-    **Match Score**: [Score]/100
+    Match Score: [Score]/100
     
-    **Missing Keywords**:
+    Missing Keywords:
     - [Keyword 1]
     - [Keyword 2]
     
-    **Improvement Suggestions**:
+    Improvement Suggestions:
     - [Suggestion 1]
     - [Suggestion 2]
     """
-    return call_llm(prompt, model_provider, api_key)
+    response = call_llm(prompt, model_provider, api_key)
+    return clean_text(response)
 
 def generate_resume_content(resume_text, job_description, model_provider, api_key):
     """
     Generates tailored resume content using LLM.
     """
     prompt = f"""
-    You are an expert resume writer. Rewrite the following resume to tailor it for the job description provided.
-    Ensure you include relevant keywords from the job description to pass ATS systems.
-    Target a 90%+ match rate.
+    You are an expert professional resume writer. Rewrite the following resume to tailor it for the job description provided.
+    
+    CRITICAL INSTRUCTIONS:
+    1. Write in a purely human, professional tone. Avoid robotic transitions or overused AI phrases.
+    2. Do NOT use any markdown formatting. No bold (**), no italics (*), no headers (#).
+    3. Do NOT use double dashes (--).
+    4. Target a 90%+ ATS match rate by naturally integrating keywords.
+    5. Output ONLY the resume content. No intro/outro.
     
     Job Description:
     {job_description}
     
     Original Resume:
     {resume_text}
-    
-    Output Format:
-    Provide the full content of the new resume. 
-    Do not include any introductory or concluding remarks. 
-    Just the resume content.
     """
-    return call_llm(prompt, model_provider, api_key)
+    response = call_llm(prompt, model_provider, api_key)
+    return clean_text(response)
 
 def generate_cover_letter_content(resume_text, job_description, model_provider, api_key):
     """
@@ -109,24 +121,31 @@ def generate_cover_letter_content(resume_text, job_description, model_provider, 
     prompt = f"""
     You are an expert career coach. Write a persuasive cover letter based on the candidate's resume and the job description.
     
+    CRITICAL INSTRUCTIONS:
+    1. Write in a purely human, professional, and engaging tone. 
+    2. Avoid generic AI phrases like "I am writing to express my interest". Be more creative and direct.
+    3. Do NOT use any markdown formatting. No bold (**), no italics (*).
+    4. Do NOT use double dashes (--).
+    5. Do not include placeholders like [Your Name] if the information is available in the resume.
+    
     Job Description:
     {job_description}
     
     Resume:
     {resume_text}
-    
-    The cover letter should be professional, engaging, and highlight why the candidate is a great fit.
-    Do not include placeholders like [Your Name] if the information is available in the resume.
     """
-    return call_llm(prompt, model_provider, api_key)
+    response = call_llm(prompt, model_provider, api_key)
+    return clean_text(response)
 
 def generate_docx_from_text(text_content):
     """
     Generates a DOCX file from raw text.
     """
     doc = Document()
+    # Split by newlines and add as paragraphs
     for line in text_content.split('\n'):
-        doc.add_paragraph(line)
+        if line.strip():
+            doc.add_paragraph(line.strip())
     
     file_stream = io.BytesIO()
     doc.save(file_stream)

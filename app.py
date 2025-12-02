@@ -2,95 +2,152 @@ import streamlit as st
 import utils
 import io
 
+# Professional UI Setup
+st.set_page_config(page_title="ATS Resume & Cover Letter Generator", page_icon="📄", layout="wide")
 
-st.set_page_config(page_title="ATS Resume & Cover Letter Generator (LLM Powered)", layout="wide")
+# Custom CSS for professional look
+st.markdown("""
+<style>
+    .main {
+        background-color: #f8f9fa;
+    }
+    .stButton>button {
+        width: 100%;
+        background-color: #007bff;
+        color: white;
+        border-radius: 5px;
+        height: 50px;
+        font-weight: bold;
+    }
+    .stButton>button:hover {
+        background-color: #0056b3;
+        color: white;
+    }
+    h1 {
+        color: #2c3e50;
+        text-align: center;
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    h2 {
+        color: #34495e;
+        border-bottom: 2px solid #ecf0f1;
+        padding-bottom: 10px;
+    }
+    .stTextArea textarea {
+        background-color: #ffffff;
+        border: 1px solid #ced4da;
+    }
+    .success-box {
+        padding: 20px;
+        background-color: #d4edda;
+        color: #155724;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+</style>
+""", unsafe_allow_html=True)
 
-st.title("ATS Resume & Cover Letter Generator 🤖")
-st.markdown("Generate a high-scoring ATS resume and cover letter using AI.")
+# Header
+st.title("📄 Professional ATS Resume & Cover Letter Generator")
+st.markdown("---")
 
-# Sidebar for Settings
-with st.sidebar:
-    st.header("Settings")
-    model_provider = st.selectbox("Select Model Provider", ["Google Gemini", "OpenAI"])
-    api_key = st.text_input("API Key", type="password", help="Enter your API key here.")
-    st.info("Get your Gemini API key from Google AI Studio (Free tier available).")
+# API Key Handling (Background)
+try:
+    api_key = st.secrets["GEMINI_API_KEY"]
+    model_provider = "Google Gemini"
+except FileNotFoundError:
+    # Fallback for local testing if secrets.toml is missing
+    api_key = st.text_input("Enter API Key (Testing Mode)", type="password")
+    model_provider = "Google Gemini"
+except KeyError:
+    st.error("Configuration Error: API Key not found in secrets.")
+    st.stop()
 
-# Main Content
-st.header("1. Upload Your Resume")
-uploaded_file = st.file_uploader("Upload your current resume (PDF or DOCX)", type=["pdf", "docx"])
+if not api_key:
+    st.warning("Please configure the API key to proceed.")
+    st.stop()
 
-resume_text = ""
-if uploaded_file is not None:
-    try:
-        if uploaded_file.name.endswith(".pdf"):
-            resume_text = utils.extract_text_from_pdf(uploaded_file)
-        elif uploaded_file.name.endswith(".docx"):
-            resume_text = utils.extract_text_from_docx(uploaded_file)
-        st.success("Resume uploaded successfully!")
-        with st.expander("View Extracted Text"):
-            st.text_area("Extracted Resume Text", resume_text, height=200)
-    except Exception as e:
-        st.error(f"Error extracting text: {str(e)}")
+# Layout using Tabs for cleaner interface
+tab1, tab2, tab3 = st.tabs(["1️⃣ Upload & Details", "2️⃣ ATS Analysis", "3️⃣ Generate & Edit"])
 
-st.header("2. Job Details")
-job_description = st.text_area("Paste Job Description Here", height=300)
-
-# ATS Analysis Section
-if resume_text and job_description and api_key:
-    if st.button("Analyze Current ATS Score"):
-        with st.spinner("Analyzing resume against job description..."):
-            try:
-                analysis_result = utils.analyze_ats_score(resume_text, job_description, model_provider, api_key)
-                st.markdown("### ATS Analysis Result")
-                st.markdown(analysis_result)
-            except Exception as e:
-                st.error(f"Analysis failed: {str(e)}")
-
-st.header("3. Generate Optimized Documents")
-
-if st.button("Generate Resume & Cover Letter"):
-    if not api_key:
-        st.error("Please enter your API Key in the sidebar.")
-    elif not resume_text:
-        st.error("Please upload a resume.")
-    elif not job_description:
-        st.error("Please paste a job description.")
-    else:
-        with st.spinner(f"Generating content using {model_provider}..."):
-            try:
-                # Generate Content
-                st.session_state['generated_resume'] = utils.generate_resume_content(resume_text, job_description, model_provider, api_key)
-                st.session_state['generated_cover_letter'] = utils.generate_cover_letter_content(resume_text, job_description, model_provider, api_key)
-                st.success("Documents generated! Review and edit below.")
-            except Exception as e:
-                st.error(f"Generation failed: {str(e)}")
-
-# Review and Edit Section
-if 'generated_resume' in st.session_state:
-    st.header("4. Review & Edit")
-    
+with tab1:
     col1, col2 = st.columns(2)
     
     with col1:
-        st.subheader("Optimized Resume")
-        edited_resume = st.text_area("Edit Resume Content", st.session_state['generated_resume'], height=600)
+        st.subheader("Upload Current Resume")
+        uploaded_file = st.file_uploader("Upload PDF or DOCX", type=["pdf", "docx"])
         
-        resume_docx = utils.generate_docx_from_text(edited_resume)
-        st.download_button(
-            label="Download Resume (DOCX)",
-            data=resume_docx,
-            file_name="Optimized_Resume.docx",
-            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-        )
-        
+        resume_text = ""
+        if uploaded_file is not None:
+            try:
+                if uploaded_file.name.endswith(".pdf"):
+                    resume_text = utils.extract_text_from_pdf(uploaded_file)
+                elif uploaded_file.name.endswith(".docx"):
+                    resume_text = utils.extract_text_from_docx(uploaded_file)
+                st.success("✅ Resume uploaded successfully!")
+            except Exception as e:
+                st.error(f"Error extracting text: {str(e)}")
+    
     with col2:
-        st.subheader("Cover Letter")
-        edited_cover_letter = st.text_area("Edit Cover Letter Content", st.session_state['generated_cover_letter'], height=600)
+        st.subheader("Job Description")
+        job_description = st.text_area("Paste the job description here...", height=300)
+
+with tab2:
+    st.header("ATS Compatibility Check")
+    if resume_text and job_description:
+        if st.button("Analyze My Resume", key="analyze_btn"):
+            with st.spinner("Auditing your resume against the job description..."):
+                try:
+                    analysis_result = utils.analyze_ats_score(resume_text, job_description, model_provider, api_key)
+                    st.markdown("### 📊 Analysis Result")
+                    st.text(analysis_result) # Use text to avoid markdown rendering issues if any remain
+                except Exception as e:
+                    st.error(f"Analysis failed: {str(e)}")
+    else:
+        st.info("Please upload a resume and provide a job description in the first tab.")
+
+with tab3:
+    st.header("Generate Optimized Documents")
+    
+    if st.button("✨ Generate Resume & Cover Letter", key="generate_btn"):
+        if not resume_text or not job_description:
+            st.error("Please complete the 'Upload & Details' tab first.")
+        else:
+            with st.spinner("Crafting your professional documents..."):
+                try:
+                    # Generate Content
+                    st.session_state['generated_resume'] = utils.generate_resume_content(resume_text, job_description, model_provider, api_key)
+                    st.session_state['generated_cover_letter'] = utils.generate_cover_letter_content(resume_text, job_description, model_provider, api_key)
+                    st.balloons()
+                    st.success("Documents generated successfully! Review and edit below.")
+                except Exception as e:
+                    st.error(f"Generation failed: {str(e)}")
+
+    # Review and Edit Section
+    if 'generated_resume' in st.session_state:
+        st.markdown("---")
+        col_res, col_cov = st.columns(2)
         
-        cover_letter_docx = utils.generate_docx_from_text(edited_cover_letter)
-        st.download_button(
-            label="Download Cover Letter (DOCX)",
-            data=cover_letter_docx,
-            file_name="Cover_Letter.docx",
-            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-        )
+        with col_res:
+            st.subheader("📝 Optimized Resume")
+            edited_resume = st.text_area("Edit Resume Content", st.session_state['generated_resume'], height=600)
+            
+            resume_docx = utils.generate_docx_from_text(edited_resume)
+            st.download_button(
+                label="⬇️ Download Resume (DOCX)",
+                data=resume_docx,
+                file_name="Optimized_Resume.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            )
+            
+        with col_cov:
+            st.subheader("✉️ Cover Letter")
+            edited_cover_letter = st.text_area("Edit Cover Letter Content", st.session_state['generated_cover_letter'], height=600)
+            
+            cover_letter_docx = utils.generate_docx_from_text(edited_cover_letter)
+            st.download_button(
+                label="⬇️ Download Cover Letter (DOCX)",
+                data=cover_letter_docx,
+                file_name="Cover_Letter.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            )
