@@ -26,11 +26,13 @@ def call_llm(prompt, model_provider, api_key):
     elif model_provider == "Google Gemini":
         genai.configure(api_key=api_key)
         try:
-            model = genai.GenerativeModel('gemini-pro')
+            # Using gemini-1.5-flash for better speed and stability
+            model = genai.GenerativeModel('gemini-1.5-flash')
             response = model.generate_content(prompt)
             return response.text
         except Exception as e:
-            return f"Error calling Gemini: {str(e)}"
+            # Return detailed error for debugging
+            return f"Error calling Gemini API: {str(e)}"
     
     return "Invalid Model Provider"
 
