@@ -20,8 +20,7 @@ def call_llm(prompt, api_key):
         response = model.generate_content(prompt)
         return response.text
     except Exception as e:
-        # Return detailed error for debugging
-        return f"Error calling Gemini API: {str(e)}"
+        raise Exception(f"Failed to communicate with Google Gemini: {str(e)}")
 
 def extract_text_from_url(url):
     """

@@ -211,21 +211,25 @@ with tab1:
     col1, col2 = st.columns(2)
     
     with col1:
-        st.subheader("Upload Current Resume")
+        st.subheader("Current Resume")
         if 'resume_text' not in st.session_state:
             st.session_state['resume_text'] = ""
             
-        uploaded_file = st.file_uploader("Upload PDF or DOCX", type=["pdf", "docx"])
+        resume_input_method = st.radio("Resume Input Method", ["Upload File", "Paste Text"], key="resume_method")
         
-        if uploaded_file is not None:
-            try:
-                if uploaded_file.name.endswith(".pdf"):
-                    st.session_state['resume_text'] = utils.extract_text_from_pdf(uploaded_file)
-                elif uploaded_file.name.endswith(".docx"):
-                    st.session_state['resume_text'] = utils.extract_text_from_docx(uploaded_file)
-                st.success("✅ Resume uploaded successfully!")
-            except Exception as e:
-                st.error(f"Error extracting text: {str(e)}")
+        if resume_input_method == "Upload File":
+            uploaded_file = st.file_uploader("Upload PDF or DOCX", type=["pdf", "docx"])
+            if uploaded_file is not None:
+                try:
+                    if uploaded_file.name.endswith(".pdf"):
+                        st.session_state['resume_text'] = utils.extract_text_from_pdf(uploaded_file)
+                    elif uploaded_file.name.endswith(".docx"):
+                        st.session_state['resume_text'] = utils.extract_text_from_docx(uploaded_file)
+                    st.success("✅ Resume uploaded successfully!")
+                except Exception as e:
+                    st.error(f"Error extracting text: {str(e)}")
+        else:
+            st.session_state['resume_text'] = st.text_area("Paste your resume text here...", value=st.session_state['resume_text'], height=250)
         
         resume_text = st.session_state['resume_text']
     
