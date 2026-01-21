@@ -212,18 +212,22 @@ with tab1:
     
     with col1:
         st.subheader("Upload Current Resume")
+        if 'resume_text' not in st.session_state:
+            st.session_state['resume_text'] = ""
+            
         uploaded_file = st.file_uploader("Upload PDF or DOCX", type=["pdf", "docx"])
         
-        resume_text = ""
         if uploaded_file is not None:
             try:
                 if uploaded_file.name.endswith(".pdf"):
-                    resume_text = utils.extract_text_from_pdf(uploaded_file)
+                    st.session_state['resume_text'] = utils.extract_text_from_pdf(uploaded_file)
                 elif uploaded_file.name.endswith(".docx"):
-                    resume_text = utils.extract_text_from_docx(uploaded_file)
+                    st.session_state['resume_text'] = utils.extract_text_from_docx(uploaded_file)
                 st.success("✅ Resume uploaded successfully!")
             except Exception as e:
                 st.error(f"Error extracting text: {str(e)}")
+        
+        resume_text = st.session_state['resume_text']
     
     with col2:
         st.subheader("Job Description")
@@ -233,9 +237,11 @@ with tab1:
             with st.expander("💡 Scraping Tips", expanded=True):
                 st.info("Major job boards (LinkedIn, Indeed) often block automated tools. If fetching fails, please copy-paste the text manually.")
 
-        job_description = ""
+        if 'job_description' not in st.session_state:
+            st.session_state['job_description'] = ""
+
         if jd_input_method == "Paste Text":
-            job_description = st.text_area("Paste the job description here...", height=250)
+            st.session_state['job_description'] = st.text_area("Paste the job description here...", value=st.session_state['job_description'], height=250)
             if 'fetched_jd' in st.session_state:
                 del st.session_state['fetched_jd'] # Clear fetched JD if switching to paste
         else:
@@ -244,17 +250,19 @@ with tab1:
                 if st.button("Fetch Job Description"):
                     with st.spinner("Extracting job details..."):
                         try:
-                            job_description = utils.extract_text_from_url(jd_url)
+                            st.session_state['job_description'] = utils.extract_text_from_url(jd_url)
                             st.success("✅ Job details extracted successfully!")
-                            st.session_state['fetched_jd'] = job_description
+                            st.session_state['fetched_jd'] = st.session_state['job_description']
                         except Exception as e:
                             st.error(f"❌ {str(e)}")
                             st.info("If the link is blocked, switch to 'Paste Text' and copy the description manually.")
             
             if 'fetched_jd' in st.session_state:
-                job_description = st.text_area("Review Extracted Job Description", st.session_state['fetched_jd'], height=200)
-            elif not jd_url: # If URL is empty, clear job_description
-                job_description = ""
+                st.session_state['job_description'] = st.text_area("Review Extracted Job Description", st.session_state['fetched_jd'], height=200)
+            elif not jd_url: # If URL is empty, clear JD
+                pass # Keep current state
+        
+        job_description = st.session_state['job_description']
 
 
 with tab2:
