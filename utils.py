@@ -14,8 +14,8 @@ def call_llm(prompt, api_key):
     """
     genai.configure(api_key=api_key)
     try:
-        # Using gemini-flash-latest as verified with user key
-        model = genai.GenerativeModel('gemini-flash-latest')
+        # Using gemini-1.5-flash for better free tier quota limits
+        model = genai.GenerativeModel('gemini-1.5-flash')
         response = model.generate_content(prompt)
         return response.text
     except Exception as e:
