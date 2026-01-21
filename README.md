@@ -8,6 +8,7 @@ A Streamlit application that uses LLMs (Google Gemini or OpenAI) to generate ATS
 - **Cover Letter Generation**: Creates persuasive cover letters customized for the specific role.
 - **Multi-Provider Support**: Choose between Google Gemini (Free tier available) or OpenAI.
 - **DOCX Export**: Download your generated documents in editable Word format.
+- **Secure Access**: Password-protected login to ensure private usage.
 
 ## Setup
 
@@ -20,7 +21,13 @@ A Streamlit application that uses LLMs (Google Gemini or OpenAI) to generate ATS
     ```bash
     python -m spacy download en_core_web_sm
     ```
-3.  **Run the application**:
+3.  **Configure Secrets**:
+    Create a `.streamlit/secrets.toml` file with your API keys and app password:
+    ```toml
+    GEMINI_API_KEY = "your_gemini_api_key"
+    password = "your_app_password"
+    ```
+4.  **Run the application**:
     ```bash
     streamlit run app.py
     ```

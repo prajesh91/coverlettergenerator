@@ -4,3 +4,5 @@ reportlab
 openai
 google-generativeai
 pdfminer.six
+requests
+beautifulsoup4

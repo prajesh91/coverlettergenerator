@@ -5,6 +5,8 @@ import io
 import os
 import openai
 import google.generativeai as genai
+import requests
+from bs4 import BeautifulSoup
 
 
 def call_llm(prompt, model_provider, api_key):
@@ -35,6 +37,60 @@ def call_llm(prompt, model_provider, api_key):
             return f"Error calling Gemini API: {str(e)}"
     
     return "Invalid Model Provider"
+
+def extract_text_from_url(url):
+    """
+    Extracts text from a job description URL using Jina Reader for better compatibility.
+    Includes special handling for LinkedIn URLs to convert them to public viewable links.
+    """
+    try:
+        # Special handling for LinkedIn personalized/collection URLs
+        if "linkedin.com" in url and "currentJobId=" in url:
+            import re
+            match = re.search(r'currentJobId=(\d+)', url)
+            if match:
+                job_id = match.group(1)
+                url = f"https://www.linkedin.com/jobs/view/{job_id}/"
+
+        # Use r.jina.ai to fetch the content as markdown/text
+        jina_url = f"https://r.jina.ai/{url}"
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        response = requests.get(jina_url, headers=headers, timeout=15)
+        response.raise_for_status()
+        
+        content = response.text
+        
+        # Check for common bot-blocking or "not found" indicators in the content
+        block_indicators = [
+            "Just a moment...",
+            "Checking your browser",
+            "Access Denied",
+            "Page not found",
+            "لم يتم العثور على الصفحة", # LinkedIn 404 in Arabic sometimes
+            "Direct target URL returned error 403",
+            "Direct target URL returned error 404"
+        ]
+        
+        if any(indicator in content for indicator in block_indicators):
+            if "error 403" in content or "Just a moment" in content:
+                raise Exception("The job board blocked our automated access. Please copy-paste the job description manually.")
+            elif "error 404" in content or "not found" in content.lower():
+                raise Exception("The job page could not be found. Please check the URL.")
+            else:
+                raise Exception("We couldn't extract the job details from this link. Please copy-paste it manually.")
+
+        return content
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 403:
+            raise Exception("Access blocked by the website. Manual copy-paste is required.")
+        elif e.response.status_code == 404:
+            raise Exception("Job page not found. Please verify the URL.")
+        else:
+            raise Exception(f"HTTP error occurred: {e.response.status_code}")
+    except Exception as e:
+        raise Exception(f"Extraction failed: {str(e)}")
 
 from pdfminer.high_level import extract_text
 
@@ -91,6 +147,54 @@ def analyze_ats_score(resume_text, job_description, model_provider, api_key):
     response = call_llm(prompt, model_provider, api_key)
     return clean_text(response)
 
+def generate_interview_questions(resume_text, job_description, model_provider, api_key):
+    """
+    Generates industry-specific and technical interview questions based on resume and JD.
+    """
+    prompt = f"""
+    You are an expert interviewer specializing in technical and industry-standard evaluations. 
+    Based on the candidate's resume and the job description, generate 10 probable industry-specific and technical interview questions.
+    
+    CRITICAL INSTRUCTIONS:
+    1. Output in plain text. No markdown formatting.
+    2. Do NOT use double dashes (--).
+    3. For EACH question, provide:
+       - The Question
+       - Why it's being asked
+       - An Outline for the Answer (a skeleton of what the candidate should mention)
+    
+    Job Description:
+    {job_description}
+    
+    Resume:
+    {resume_text}
+    """
+    response = call_llm(prompt, model_provider, api_key)
+    return clean_text(response)
+
+def generate_career_insights(resume_text, job_description, model_provider, api_key):
+    """
+    Generates career insights including salary negotiation and growth.
+    """
+    prompt = f"""
+    You are a career consultant. Based on the candidate's resume and the job description, provide the following insights:
+    1. Salary Negotiation: Estimated range based on industry status and specific tips for this role.
+    2. Career Growth: A potential growth chart/pathway for someone in this position.
+    3. Outcome of the Job: What the candidate can expect to achieve in terms of skill development and career impact.
+    
+    CRITICAL INSTRUCTIONS:
+    1. Output in plain text. No markdown formatting.
+    2. Do NOT use double dashes (--).
+    
+    Job Description:
+    {job_description}
+    
+    Resume:
+    {resume_text}
+    """
+    response = call_llm(prompt, model_provider, api_key)
+    return clean_text(response)
+
 def generate_resume_content(resume_text, job_description, model_provider, api_key):
     """
     Generates tailored resume content using LLM.
@@ -127,6 +231,57 @@ def generate_cover_letter_content(resume_text, job_description, model_provider, 
     3. Do NOT use any markdown formatting. No bold (**), no italics (*).
     4. Do NOT use double dashes (--).
     5. Do not include placeholders like [Your Name] if the information is available in the resume.
+    
+    Job Description:
+    {job_description}
+    
+    Resume:
+    {resume_text}
+    """
+    response = call_llm(prompt, model_provider, api_key)
+    return clean_text(response)
+
+def generate_screening_questions(resume_text, job_description, model_provider, api_key):
+    """
+    Generates 5-7 industry-standard screening questions based on JD and Resume.
+    """
+    prompt = f"""
+    You are an expert recruiter. Based on the job description and the candidate's resume, generate 5-7 industry-standard screening questions.
+    These should be questions that a recruiter would likely ask during an initial phone screen (e.g., salary expectations, relocation, core skills).
+    
+    CRITICAL INSTRUCTIONS:
+    1. Output in plain text. No markdown formatting.
+    2. Do NOT use double dashes (--).
+    3. For EACH question, provide:
+       - The Question
+       - A brief tip on why they are asking
+       - An Outline for the Answer (suggested content based on their resume)
+    
+    Job Description:
+    {job_description}
+    
+    Resume:
+    {resume_text}
+    """
+    response = call_llm(prompt, model_provider, api_key)
+    return clean_text(response)
+
+def generate_final_interview_questions(resume_text, job_description, model_provider, api_key):
+    """
+    Generates final-round behavioral and culture-fit questions.
+    """
+    prompt = f"""
+    You are a Hiring Manager preparing for a final-round interview. 
+    Based on the candidate's resume and the job description, generate 5 high-impact final interview questions.
+    Focus on long-term fit, behavioral scenarios, and executive presence.
+    
+    CRITICAL INSTRUCTIONS:
+    1. Output in plain text. No markdown formatting.
+    2. Do NOT use double dashes (--).
+    3. For EACH question, provide:
+       - The Question
+       - The underlying trait being tested
+       - An Outline for the Answer (recommended structure for a winning response)
     
     Job Description:
     {job_description}

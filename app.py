@@ -2,63 +2,214 @@ import streamlit as st
 import utils
 import io
 
-# Professional UI Setup
-st.set_page_config(page_title="ATS Resume & Cover Letter Generator", page_icon="📄", layout="wide")
+def check_password():
+    """Returns `True` if the user had the correct password."""
 
-# Custom CSS for professional look
+    def password_entered():
+        """Checks whether a password entered by the user is correct."""
+        if st.session_state["password"] == st.secrets["password"]:
+            st.session_state["password_correct"] = True
+            del st.session_state["password"]  # don't store password
+        else:
+            st.session_state["password_correct"] = False
+
+    if "password_correct" not in st.session_state:
+        # First run, show input for password.
+        st.text_input(
+            "Password", type="password", on_change=password_entered, key="password"
+        )
+        return False
+    elif not st.session_state["password_correct"]:
+        # Password not correct, show input + error.
+        st.text_input(
+            "Password", type="password", on_change=password_entered, key="password"
+        )
+        st.error("😕 Password incorrect")
+        return False
+    else:
+        # Password correct.
+        return True
+
+if not check_password():
+    st.stop()  # Do not continue running script
+
+# Professional UI Setup
+st.set_page_config(
+    page_title="Free AI ATS Resume & Cover Letter Generator | Optimize Your Career",
+    page_icon="📄",
+    layout="wide",
+    initial_sidebar_state="expanded",
+    menu_items={
+        'Get Help': 'https://aistudio.google.com/app/apikey',
+        'Report a bug': None,
+        'About': "# Professional AI Career Suite\nOptimize your resume and generate persuasive cover letters instantly."
+    }
+)
+
+# Custom CSS for HeyOrbi-inspired look
 st.markdown("""
 <style>
-    .main {
-        background-color: #f8f9fa;
+    @import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;600;700&display=swap');
+
+    :root {
+        --primary-bg: #0A0A0A;
+        --accent-color: #FF4D2D;
+        --text-main: #FFFFFF;
+        --text-muted: #A1A1AA;
+        --glass-bg: rgba(255, 255, 255, 0.05);
+        --glass-border: rgba(255, 255, 255, 0.1);
     }
-    .stButton>button {
-        width: 100%;
-        background-color: #007bff;
-        color: white;
-        border-radius: 5px;
-        height: 50px;
-        font-weight: bold;
+
+    .stApp {
+        background-color: var(--primary-bg);
+        color: var(--text-main);
+        font-family: 'Instrument Sans', sans-serif;
     }
-    .stButton>button:hover {
-        background-color: #0056b3;
-        color: white;
-    }
-    h1 {
-        color: #2c3e50;
+
+    /* Centered Hero Section */
+    .hero-container {
         text-align: center;
-        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        padding: 60px 20px;
+        max-width: 900px;
+        margin: 0 auto;
     }
-    h2 {
-        color: #34495e;
-        border-bottom: 2px solid #ecf0f1;
-        padding-bottom: 10px;
+
+    h1 {
+        font-size: 3.5rem !important;
+        font-weight: 700 !important;
+        background: linear-gradient(to bottom, #FFFFFF 0%, #A1A1AA 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 20px !important;
+        letter-spacing: -0.02em !important;
     }
-    .stTextArea textarea {
-        background-color: #ffffff;
-        border: 1px solid #ced4da;
+
+    h2, h3 {
+        color: var(--text-main) !important;
+        font-weight: 600 !important;
     }
-    .success-box {
-        padding: 20px;
-        background-color: #d4edda;
-        color: #155724;
-        border-radius: 5px;
-        margin-bottom: 20px;
+
+    p, .stMarkdown {
+        color: var(--text-muted);
+        font-size: 1.1rem;
+    }
+
+    /* Glassmorphism Cards */
+    div[data-testid="stVerticalBlock"] > div[style*="flex-direction: column"] > div {
+        # background: var(--glass-bg);
+        # border: 1px solid var(--glass-border);
+        # border-radius: 16px;
+        # padding: 1.5rem;
+    }
+
+    /* Buttons */
+    .stButton>button {
+        background-color: var(--accent-color) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 12px !important;
+        padding: 0.75rem 2rem !important;
+        font-weight: 600 !important;
+        transition: all 0.2s ease !important;
+        width: 100%;
+        height: auto !important;
+    }
+
+    .stButton>button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px -10px var(--accent-color);
+        opacity: 0.9;
+    }
+
+    /* Tabs */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+        background-color: transparent;
+    }
+
+    .stTabs [data-baseweb="tab"] {
+        height: 45px;
+        background-color: var(--glass-bg);
+        border-radius: 8px 8px 0px 0px;
+        border: 1px solid var(--glass-border);
+        padding: 0 20px;
+        color: var(--text-muted);
+    }
+
+    .stTabs [aria-selected="true"] {
+        background-color: var(--glass-border) !important;
+        color: var(--text-main) !important;
+        border-bottom: 2px solid var(--accent-color) !important;
+    }
+
+    /* Inputs */
+    /* Inputs - High Contrast for Readability */
+    .stTextInput input, .stTextArea textarea {
+        background-color: #FFFFFF !important;
+        border: 1px solid #D1D5DB !important;
+        color: #000000 !important;
+        border-radius: 10px !important;
+        font-weight: 500 !important;
+    }
+
+    .stTextInput input:focus, .stTextArea textarea:focus {
+        border-color: var(--accent-color) !important;
+        box-shadow: 0 0 0 1px var(--accent-color) !important;
+    }
+
+    /* Sidebar */
+    [data-testid="stSidebar"] {
+        background-color: #0F0F0F;
+        border-right: 1px solid var(--glass-border);
+    }
+
+    /* Gradient Blur Background */
+    .gradient-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: 
+            radial-gradient(circle at 10% 10%, rgba(255, 77, 45, 0.05) 0%, transparent 40%),
+            radial-gradient(circle at 90% 90%, rgba(0, 123, 255, 0.05) 0%, transparent 40%);
+        z-index: -1;
     }
 </style>
+<div class="gradient-bg"></div>
 """, unsafe_allow_html=True)
 
-# Header
-st.title("📄 Professional ATS Resume & Cover Letter Generator")
+# SEO Header & Hero
+st.markdown("""
+    <div class="hero-container">
+        <h1>Your AI-Powered Career Edge</h1>
+        <p>Stop guessing. Start winning. Optimize your resume for ATS, generate high-converting cover letters, and unlock career insights in seconds.</p>
+    </div>
+""", unsafe_allow_html=True)
 st.markdown("---")
 
-# API Key Handling (Background)
-try:
+# API Key Handling
+with st.sidebar:
+    st.header("Settings")
+    st.markdown("Enter your configuration details below.")
+    
     # Try to get from secrets first
-    api_key = st.secrets["GEMINI_API_KEY"]
-except (FileNotFoundError, KeyError):
-    # Fallback for immediate user testing (if secrets are not yet set on Cloud)
-    # This ensures the app works right away for the demo
-    api_key = "AIzaSyB8le0r8J12eWzIrkmLVeVdxW3BQ04CKMc"
+    secrets_key = ""
+    try:
+        secrets_key = st.secrets.get("GEMINI_API_KEY", "")
+    except Exception:
+        pass
+    
+    api_key = st.text_input(
+        "Gemini API Key", 
+        value=secrets_key,
+        type="password",
+        help="Get your key at https://aistudio.google.com/app/apikey"
+    )
+    
+    if not api_key:
+        st.warning("⚠️ API Key missing. Please provide it in the sidebar.")
+        st.stop()
 
 model_provider = "Google Gemini"
 
@@ -67,7 +218,7 @@ if not api_key:
     st.stop()
 
 # Layout using Tabs for cleaner interface
-tab1, tab2, tab3 = st.tabs(["1️⃣ Upload & Details", "2️⃣ ATS Analysis", "3️⃣ Generate & Edit"])
+tab1, tab2, tab3, tab4 = st.tabs(["1️⃣ Upload & Details", "2️⃣ ATS Analysis", "3️⃣ Generate & Edit", "4️⃣ Career Insights"])
 
 with tab1:
     col1, col2 = st.columns(2)
@@ -89,7 +240,35 @@ with tab1:
     
     with col2:
         st.subheader("Job Description")
-        job_description = st.text_area("Paste the job description here...", height=300)
+        jd_input_method = st.radio("Input Method", ["Paste Text", "Provide URL"])
+        
+        if jd_input_method == "Provide URL":
+            with st.expander("💡 Scraping Tips", expanded=True):
+                st.info("Major job boards (LinkedIn, Indeed) often block automated tools. If fetching fails, please copy-paste the text manually.")
+
+        job_description = ""
+        if jd_input_method == "Paste Text":
+            job_description = st.text_area("Paste the job description here...", height=250)
+            if 'fetched_jd' in st.session_state:
+                del st.session_state['fetched_jd'] # Clear fetched JD if switching to paste
+        else:
+            jd_url = st.text_input("Job Description URL (LinkedIn, Indeed, etc.)")
+            if jd_url:
+                if st.button("Fetch Job Description"):
+                    with st.spinner("Extracting job details..."):
+                        try:
+                            job_description = utils.extract_text_from_url(jd_url)
+                            st.success("✅ Job details extracted successfully!")
+                            st.session_state['fetched_jd'] = job_description
+                        except Exception as e:
+                            st.error(f"❌ {str(e)}")
+                            st.info("If the link is blocked, switch to 'Paste Text' and copy the description manually.")
+            
+            if 'fetched_jd' in st.session_state:
+                job_description = st.text_area("Review Extracted Job Description", st.session_state['fetched_jd'], height=200)
+            elif not jd_url: # If URL is empty, clear job_description
+                job_description = ""
+
 
 with tab2:
     st.header("ATS Compatibility Check")
@@ -117,8 +296,12 @@ with tab3:
                     # Generate Content
                     st.session_state['generated_resume'] = utils.generate_resume_content(resume_text, job_description, model_provider, api_key)
                     st.session_state['generated_cover_letter'] = utils.generate_cover_letter_content(resume_text, job_description, model_provider, api_key)
+                    st.session_state['interview_questions'] = utils.generate_interview_questions(resume_text, job_description, model_provider, api_key)
+                    st.session_state['career_insights'] = utils.generate_career_insights(resume_text, job_description, model_provider, api_key)
+                    st.session_state['screening_questions'] = utils.generate_screening_questions(resume_text, job_description, model_provider, api_key)
+                    st.session_state['final_interview_questions'] = utils.generate_final_interview_questions(resume_text, job_description, model_provider, api_key)
                     st.balloons()
-                    st.success("Documents generated successfully! Review and edit below.")
+                    st.success("Documents & complete interview suite generated successfully!")
                 except Exception as e:
                     st.error(f"Generation failed: {str(e)}")
 
@@ -150,3 +333,44 @@ with tab3:
                 file_name="Cover_Letter.docx",
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             )
+
+        # Interview Questions Section
+        st.markdown("---")
+        st.subheader("📋 Initial Recruitment Screening")
+        st.info("Recruiter-level questions to verify your core alignment and basics.")
+        if 'screening_questions' in st.session_state:
+            st.text_area("Screening Questions & Answer Outlines", st.session_state['screening_questions'], height=300)
+            
+        st.markdown("---")
+        st.subheader("💡 Technical & Industry Expertise")
+        st.info("In-depth questions about your skills and industry-standard practices relevant to this role.")
+        if 'interview_questions' in st.session_state:
+            st.text_area("Expertise Deep Dive & Answer Outlines", st.session_state['interview_questions'], height=400)
+
+        st.markdown("---")
+        st.subheader("🏆 Final Round & Cultural Fit")
+        st.info("Scenario-based questions designed for the final hiring manager interview.")
+        if 'final_interview_questions' in st.session_state:
+            st.text_area("Selection Committee Questions & Answer Outlines", st.session_state['final_interview_questions'], height=300)
+
+with tab4:
+    st.header("📈 Market Analysis & Career Growth")
+    st.markdown("""
+        **Unlock your professional potential.** Our AI analyzes industry trends, salary data, and career pathways to give you a strategic advantage.
+    """)
+    if 'career_insights' in st.session_state:
+        st.text_area("Personalized Insights", st.session_state['career_insights'], height=600)
+    else:
+        st.info("Complete the document generation in the previous tab to unlock your career insights.")
+
+# SEO Footer
+st.markdown("---")
+st.markdown("""
+    <div style="text-align: center; color: #A1A1AA; padding: 40px 0;">
+        <h4>The Ultimate AI Career Toolkit</h4>
+        <p style="font-size: 0.9rem;">
+            Designed for modern professionals. Powered by advanced LLMs to beat Applicant Tracking Systems (ATS) and land more interviews. 
+            Built for privacy and professional excellence.
+        </p>
+    </div>
+""", unsafe_allow_html=True)
