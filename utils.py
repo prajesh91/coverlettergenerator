@@ -84,6 +84,16 @@ def extract_text_from_pdf(file):
     """
     return extract_text(file)
 
+def extract_text_from_docx(file):
+    """
+    Extracts text from a DOCX file.
+    """
+    doc = Document(file)
+    full_text = []
+    for para in doc.paragraphs:
+        full_text.append(para.text)
+    return "\n".join(full_text)
+
 import re
 
 def clean_text(text):
