@@ -191,29 +191,18 @@ st.markdown("---")
 # API Key Handling
 with st.sidebar:
     st.header("Settings")
-    st.markdown("Enter your configuration details below.")
-    
-    # Try to get from secrets first
-    secrets_key = ""
-    try:
-        secrets_key = st.secrets.get("GEMINI_API_KEY", "")
-    except Exception:
-        pass
+    st.markdown("Enter your Gemini API key below to enable AI features.")
     
     api_key = st.text_input(
         "Gemini API Key", 
-        value=secrets_key,
         type="password",
         help="Get your key at https://aistudio.google.com/app/apikey"
     )
     
     if not api_key:
-        st.warning("⚠️ API Key missing. Please provide it in the sidebar.")
+        st.info("💡 Tip: You can get a free API key from [Google AI Studio](https://aistudio.google.com/app/apikey).")
+        st.warning("⚠️ API Key missing. Please provide it to proceed.")
         st.stop()
-
-if not api_key:
-    st.warning("Please configure the Gemini API key to proceed.")
-    st.stop()
 
 # Layout using Tabs for cleaner interface
 tab1, tab2, tab3, tab4, tab5 = st.tabs(["1️⃣ Upload & Details", "2️⃣ ATS Analysis", "3️⃣ Generate Documents", "4️⃣ Career Insights", "5️⃣ Interview Preparation"])
