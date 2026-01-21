@@ -6,6 +6,7 @@ import os
 import google.generativeai as genai
 import requests
 from bs4 import BeautifulSoup
+from pdfminer.high_level import extract_text
 
 
 def call_llm(prompt, api_key):
