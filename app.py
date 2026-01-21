@@ -218,7 +218,7 @@ if not api_key:
     st.stop()
 
 # Layout using Tabs for cleaner interface
-tab1, tab2, tab3, tab4 = st.tabs(["1️⃣ Upload & Details", "2️⃣ ATS Analysis", "3️⃣ Generate & Edit", "4️⃣ Career Insights"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["1️⃣ Upload & Details", "2️⃣ ATS Analysis", "3️⃣ Generate Documents", "4️⃣ Career Insights", "5️⃣ Interview Preparation"])
 
 with tab1:
     col1, col2 = st.columns(2)
@@ -334,24 +334,7 @@ with tab3:
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             )
 
-        # Interview Questions Section
-        st.markdown("---")
-        st.subheader("📋 Initial Recruitment Screening")
-        st.info("Recruiter-level questions to verify your core alignment and basics.")
-        if 'screening_questions' in st.session_state:
-            st.text_area("Screening Questions & Answer Outlines", st.session_state['screening_questions'], height=300)
-            
-        st.markdown("---")
-        st.subheader("💡 Technical & Industry Expertise")
-        st.info("In-depth questions about your skills and industry-standard practices relevant to this role.")
-        if 'interview_questions' in st.session_state:
-            st.text_area("Expertise Deep Dive & Answer Outlines", st.session_state['interview_questions'], height=400)
-
-        st.markdown("---")
-        st.subheader("🏆 Final Round & Cultural Fit")
-        st.info("Scenario-based questions designed for the final hiring manager interview.")
-        if 'final_interview_questions' in st.session_state:
-            st.text_area("Selection Committee Questions & Answer Outlines", st.session_state['final_interview_questions'], height=300)
+            )
 
 with tab4:
     st.header("📈 Market Analysis & Career Growth")
@@ -361,7 +344,48 @@ with tab4:
     if 'career_insights' in st.session_state:
         st.text_area("Personalized Insights", st.session_state['career_insights'], height=600)
     else:
-        st.info("Complete the document generation in the previous tab to unlock your career insights.")
+        st.info("Complete the document generation in the 'Generate Documents' tab to unlock your career insights.")
+
+with tab5:
+    st.header("🎯 Interview Preparation Suite")
+    st.markdown("""
+        **Master your interview.** We've generated a comprehensive set of questions tailored to your resume and this specific job. 
+        Use the feedback tool below to practice your answers.
+    """)
+    
+    if 'screening_questions' in st.session_state:
+        with st.expander("📋 Initial Recruitment Screening", expanded=True):
+            st.info("Recruiter-level questions to verify your core alignment and basics.")
+            st.text_area("Screening Questions & Answer Outlines", st.session_state['screening_questions'], height=300)
+            
+        with st.expander("💡 Technical & Industry Expertise", expanded=False):
+            st.info("In-depth questions about your skills and industry-standard practices.")
+            st.text_area("Expertise Deep Dive & Answer Outlines", st.session_state['interview_questions'], height=400)
+
+        with st.expander("🏆 Final Round & Cultural Fit", expanded=False):
+            st.info("Scenario-based questions for hiring managers.")
+            st.text_area("Selection Committee Questions & Answer Outlines", st.session_state['final_interview_questions'], height=300)
+            
+        st.markdown("---")
+        st.subheader("🎤 Mock Interview Practice")
+        st.markdown("Paste a question from above and your draft answer to get professional coaching.")
+        
+        practice_q = st.text_input("Interview Question")
+        practice_a = st.text_area("Your Answer", height=150)
+        
+        if st.button("Get Expert Feedback"):
+            if practice_q and practice_a:
+                with st.spinner("Analyzing your response..."):
+                    try:
+                        feedback = utils.provide_interview_feedback(practice_q, practice_a, job_description, model_provider, api_key)
+                        st.markdown("### 📝 Coaching Feedback")
+                        st.text(feedback)
+                    except Exception as e:
+                        st.error(f"Feedback failed: {str(e)}")
+            else:
+                st.warning("Please provide both a question and your answer.")
+    else:
+        st.info("Complete the document generation in the 'Generate Documents' tab to unlock your interview prep.")
 
 # SEO Footer
 st.markdown("---")

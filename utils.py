@@ -292,6 +292,34 @@ def generate_final_interview_questions(resume_text, job_description, model_provi
     response = call_llm(prompt, model_provider, api_key)
     return clean_text(response)
 
+def provide_interview_feedback(question, answer, job_description, model_provider, api_key):
+    """
+    Provides feedback on a user's answer to a specific interview question.
+    """
+    prompt = f"""
+    You are an expert interview coach. Evaluate the following answer to an interview question.
+    
+    Job Description:
+    {job_description}
+    
+    Question:
+    {question}
+    
+    Candidate's Answer:
+    {answer}
+    
+    Output Format:
+    - Feedback: [Detailed feedback on the strengths and weaknesses of the answer]
+    - Suggestion: [How to improve the answer using the STAR method if applicable]
+    - Improved Answer: [A sample of how a strong candidate would answer this]
+    
+    CRITICAL INSTRUCTIONS:
+    1. Output in plain text. No markdown formatting.
+    2. Do NOT use double dashes (--).
+    """
+    response = call_llm(prompt, model_provider, api_key)
+    return clean_text(response)
+
 def generate_docx_from_text(text_content):
     """
     Generates a DOCX file from raw text.
