@@ -332,7 +332,7 @@ with tab3:
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             )
 
-            )
+
 
 with tab4:
     st.header("📈 Market Analysis & Career Growth")
