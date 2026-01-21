@@ -211,10 +211,8 @@ with st.sidebar:
         st.warning("⚠️ API Key missing. Please provide it in the sidebar.")
         st.stop()
 
-model_provider = "Google Gemini"
-
 if not api_key:
-    st.warning("Please configure the API key to proceed.")
+    st.warning("Please configure the Gemini API key to proceed.")
     st.stop()
 
 # Layout using Tabs for cleaner interface
@@ -276,7 +274,7 @@ with tab2:
         if st.button("Analyze My Resume", key="analyze_btn"):
             with st.spinner("Auditing your resume against the job description..."):
                 try:
-                    analysis_result = utils.analyze_ats_score(resume_text, job_description, model_provider, api_key)
+                    analysis_result = utils.analyze_ats_score(resume_text, job_description, api_key)
                     st.markdown("### 📊 Analysis Result")
                     st.text(analysis_result) # Use text to avoid markdown rendering issues if any remain
                 except Exception as e:
@@ -294,12 +292,12 @@ with tab3:
             with st.spinner("Crafting your professional documents..."):
                 try:
                     # Generate Content
-                    st.session_state['generated_resume'] = utils.generate_resume_content(resume_text, job_description, model_provider, api_key)
-                    st.session_state['generated_cover_letter'] = utils.generate_cover_letter_content(resume_text, job_description, model_provider, api_key)
-                    st.session_state['interview_questions'] = utils.generate_interview_questions(resume_text, job_description, model_provider, api_key)
-                    st.session_state['career_insights'] = utils.generate_career_insights(resume_text, job_description, model_provider, api_key)
-                    st.session_state['screening_questions'] = utils.generate_screening_questions(resume_text, job_description, model_provider, api_key)
-                    st.session_state['final_interview_questions'] = utils.generate_final_interview_questions(resume_text, job_description, model_provider, api_key)
+                    st.session_state['generated_resume'] = utils.generate_resume_content(resume_text, job_description, api_key)
+                    st.session_state['generated_cover_letter'] = utils.generate_cover_letter_content(resume_text, job_description, api_key)
+                    st.session_state['interview_questions'] = utils.generate_interview_questions(resume_text, job_description, api_key)
+                    st.session_state['career_insights'] = utils.generate_career_insights(resume_text, job_description, api_key)
+                    st.session_state['screening_questions'] = utils.generate_screening_questions(resume_text, job_description, api_key)
+                    st.session_state['final_interview_questions'] = utils.generate_final_interview_questions(resume_text, job_description, api_key)
                     st.balloons()
                     st.success("Documents & complete interview suite generated successfully!")
                 except Exception as e:
@@ -377,7 +375,7 @@ with tab5:
             if practice_q and practice_a:
                 with st.spinner("Analyzing your response..."):
                     try:
-                        feedback = utils.provide_interview_feedback(practice_q, practice_a, job_description, model_provider, api_key)
+                        feedback = utils.provide_interview_feedback(practice_q, practice_a, job_description, api_key)
                         st.markdown("### 📝 Coaching Feedback")
                         st.text(feedback)
                     except Exception as e:

@@ -1,12 +1,11 @@
 # ATS Resume & Cover Letter Generator 🤖
 
-A Streamlit application that uses LLMs (Google Gemini or OpenAI) to generate ATS-optimized resumes and cover letters based on a job description.
+A Streamlit application that uses Google Gemini to generate ATS-optimized resumes and cover letters based on a job description.
 
 ## Features
 
 - **ATS Optimization**: Tailors your resume summary and experience to match job descriptions.
 - **Cover Letter Generation**: Creates persuasive cover letters customized for the specific role.
-- **Multi-Provider Support**: Choose between Google Gemini (Free tier available) or OpenAI.
 - **DOCX Export**: Download your generated documents in editable Word format.
 - **Secure Access**: Password-protected login to ensure private usage.
 
@@ -34,7 +33,7 @@ A Streamlit application that uses LLMs (Google Gemini or OpenAI) to generate ATS
 
 ## Usage
 
-1.  Enter your API Key (Google Gemini or OpenAI).
+1.  Enter your Gemini API Key.
 2.  Fill in your profile details (Name, Experience, etc.).
 3.  Paste the Job Description you are applying for.
 4.  Click **Generate Documents**.

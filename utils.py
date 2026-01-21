@@ -3,40 +3,24 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 import io
 import os
-import openai
 import google.generativeai as genai
 import requests
 from bs4 import BeautifulSoup
 
 
-def call_llm(prompt, model_provider, api_key):
+def call_llm(prompt, api_key):
     """
-    Calls the specified LLM provider to generate content.
+    Calls Google Gemini to generate content.
     """
-    if model_provider == "OpenAI":
-        openai.api_key = api_key
-        try:
-            response = openai.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.7
-            )
-            return response.choices[0].message.content.strip()
-        except Exception as e:
-            return f"Error calling OpenAI: {str(e)}"
-            
-    elif model_provider == "Google Gemini":
-        genai.configure(api_key=api_key)
-        try:
-            # Using gemini-flash-latest as verified with user key
-            model = genai.GenerativeModel('gemini-flash-latest')
-            response = model.generate_content(prompt)
-            return response.text
-        except Exception as e:
-            # Return detailed error for debugging
-            return f"Error calling Gemini API: {str(e)}"
-    
-    return "Invalid Model Provider"
+    genai.configure(api_key=api_key)
+    try:
+        # Using gemini-flash-latest as verified with user key
+        model = genai.GenerativeModel('gemini-flash-latest')
+        response = model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        # Return detailed error for debugging
+        return f"Error calling Gemini API: {str(e)}"
 
 def extract_text_from_url(url):
     """
@@ -117,7 +101,7 @@ def clean_text(text):
     text = re.sub(r'--', '', text)
     return text.strip()
 
-def analyze_ats_score(resume_text, job_description, model_provider, api_key):
+def analyze_ats_score(resume_text, job_description, api_key):
     """
     Analyzes the resume against the job description and provides an ATS score.
     """
@@ -144,10 +128,10 @@ def analyze_ats_score(resume_text, job_description, model_provider, api_key):
     - [Suggestion 1]
     - [Suggestion 2]
     """
-    response = call_llm(prompt, model_provider, api_key)
+    response = call_llm(prompt, api_key)
     return clean_text(response)
 
-def generate_interview_questions(resume_text, job_description, model_provider, api_key):
+def generate_interview_questions(resume_text, job_description, api_key):
     """
     Generates industry-specific and technical interview questions based on resume and JD.
     """
@@ -169,10 +153,10 @@ def generate_interview_questions(resume_text, job_description, model_provider, a
     Resume:
     {resume_text}
     """
-    response = call_llm(prompt, model_provider, api_key)
+    response = call_llm(prompt, api_key)
     return clean_text(response)
 
-def generate_career_insights(resume_text, job_description, model_provider, api_key):
+def generate_career_insights(resume_text, job_description, api_key):
     """
     Generates career insights including salary negotiation and growth.
     """
@@ -192,10 +176,10 @@ def generate_career_insights(resume_text, job_description, model_provider, api_k
     Resume:
     {resume_text}
     """
-    response = call_llm(prompt, model_provider, api_key)
+    response = call_llm(prompt, api_key)
     return clean_text(response)
 
-def generate_resume_content(resume_text, job_description, model_provider, api_key):
+def generate_resume_content(resume_text, job_description, api_key):
     """
     Generates tailored resume content using LLM.
     """
@@ -215,10 +199,10 @@ def generate_resume_content(resume_text, job_description, model_provider, api_ke
     Original Resume:
     {resume_text}
     """
-    response = call_llm(prompt, model_provider, api_key)
+    response = call_llm(prompt, api_key)
     return clean_text(response)
 
-def generate_cover_letter_content(resume_text, job_description, model_provider, api_key):
+def generate_cover_letter_content(resume_text, job_description, api_key):
     """
     Generates cover letter content using LLM.
     """
@@ -238,10 +222,10 @@ def generate_cover_letter_content(resume_text, job_description, model_provider, 
     Resume:
     {resume_text}
     """
-    response = call_llm(prompt, model_provider, api_key)
+    response = call_llm(prompt, api_key)
     return clean_text(response)
 
-def generate_screening_questions(resume_text, job_description, model_provider, api_key):
+def generate_screening_questions(resume_text, job_description, api_key):
     """
     Generates 5-7 industry-standard screening questions based on JD and Resume.
     """
@@ -263,10 +247,10 @@ def generate_screening_questions(resume_text, job_description, model_provider, a
     Resume:
     {resume_text}
     """
-    response = call_llm(prompt, model_provider, api_key)
+    response = call_llm(prompt, api_key)
     return clean_text(response)
 
-def generate_final_interview_questions(resume_text, job_description, model_provider, api_key):
+def generate_final_interview_questions(resume_text, job_description, api_key):
     """
     Generates final-round behavioral and culture-fit questions.
     """
@@ -289,10 +273,10 @@ def generate_final_interview_questions(resume_text, job_description, model_provi
     Resume:
     {resume_text}
     """
-    response = call_llm(prompt, model_provider, api_key)
+    response = call_llm(prompt, api_key)
     return clean_text(response)
 
-def provide_interview_feedback(question, answer, job_description, model_provider, api_key):
+def provide_interview_feedback(question, answer, job_description, api_key):
     """
     Provides feedback on a user's answer to a specific interview question.
     """
@@ -317,7 +301,7 @@ def provide_interview_feedback(question, answer, job_description, model_provider
     1. Output in plain text. No markdown formatting.
     2. Do NOT use double dashes (--).
     """
-    response = call_llm(prompt, model_provider, api_key)
+    response = call_llm(prompt, api_key)
     return clean_text(response)
 
 def generate_docx_from_text(text_content):
